@@ -1,0 +1,150 @@
+﻿@model AT.Web.UI.ViewModel.UserViewModel
+@{
+    ViewData["Title"] = "Başvuru Formu";
+}
+
+<style>
+    .select2-container .select2-selection--single {
+        height: 37.9861px !important;
+        padding: 4px
+    }
+</style>
+
+<div style="margin-top:30px;" class="col-md-8 offset-md-2">
+    <h3>REZERVASYON YAP</h3>
+    <hr />
+    <p></p>
+    <form asp-route="~/Home/Index" id="createdForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputFirstName">AD</label>
+                    <input class="form-control" id="inputFirstName" type="text" asp-for="@Model.InsuredUser.FirstName" required />
+                    <span asp-validation-for="@Model.InsuredUser.FirstName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputLastName">SOYAD</label>
+                    <input class="form-control" id="inputLastName" type="text" asp-for="@Model.InsuredUser.LastName" required />
+                    <span asp-validation-for="@Model.InsuredUser.LastName" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputPolicyNo">POLİÇE NO</label>
+                    <input class="form-control" id="inputPolicyNo" type="text" maxlength="10" asp-for="@Model.InsuredUser.PolicyNo" required />
+                    <span asp-validation-for="@Model.InsuredUser.PolicyNo" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputIdentityNo">TC</label>
+                    <input class="form-control" id="inputIdentityNo" maxlength="11" type="text" asp-for="@Model.InsuredUser.IdentityNo" required />
+                    <span asp-validation-for="@Model.InsuredUser.IdentityNo" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputCityId">İL</label>
+                    <select class="form-control select2" id="inputCityId" asp-for="@Model.InsuredUser.CityId" asp-items="@Model.CityList" required>
+                        <option disabled selected>Seçiniz</option>
+                    </select>
+                    <span asp-validation-for="@Model.InsuredUser.CityId" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputDistrictId">İLÇE</label>
+                    <select class="form-control select2" id="inputDistrictId" asp-for="@Model.InsuredUser.DistrictId" required>
+                    </select>
+                    <span asp-validation-for="@Model.InsuredUser.DistrictId" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="small mb-1" for="inputRezervDate">REZERVASYON TARİHİ</label>
+                    <input class="form-control datepicker" id="inputRezervDate" type="datetime" asp-for="@Model.InsuredUser.RezervDate" required />
+                    <span asp-validation-for="@Model.InsuredUser.RezervDate" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div>
+            <input type="submit" class="btn btn-sm btn-success" style="float:right" id="btnSave" value="GÖNDER" />
+            <a href="~/Home/Index" class="btn btn-sm btn-secondary">İPTAL</a>
+        </div>
+    </form>
+
+</div>
+
+@section Scripts{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('#inputCityId').change(function () {
+                var cityId = $(this).val();
+                $('#inputDistrictId').empty();
+
+                $.ajax({
+                    type: 'Get',
+                    url: '/Home/GetDistrictList',
+                    data: { 'cityId': cityId },
+                    success: function (data) {
+                        for (var i = 0; i < data.length; i++) {
+                            $('#inputDistrictId').append('<option value=' + data[i].Id + '>' + data[i].Name + '</option>');
+                        }
+                    }
+                });
+            });
+
+            $('#createdForm').submit(function (e) {
+                e.preventDefault();
+                debugger;
+
+                $.ajax({
+                    type: 'post',
+                    url: '/Home/Index',
+                    data: $('#createdForm').serialize(),
+                    dataType: 'Json',
+                    success: function (data) {
+                        if (data.IsSuccess) {
+                            swal({
+                                title: data.Message,
+                                text: "Talebiniz Bize Ulaştı",
+                                icon: "success",
+                                buttons: false,
+                                closeOnClickOutside: false,
+                                closeOnEsc: false,
+                                timer: 2000,
+                            });
+                            setTimeout(function () {
+                                window.location.href = "/Home/Index";
+                            }, 2000);
+                        } else {
+                            swal({
+                                title:"HATA" ,
+                                text: data.Message,
+                                icon: "error",
+                                buttons: false,
+                                closeOnClickOutside: false,
+                                closeOnEsc: false,
+                                timer: 2000,
+                            });
+                        }
+                    },
+                    error: function (data) {
+                        alert(data);
+                    }
+                });
+            });
+        });
+    </script>
+}
+

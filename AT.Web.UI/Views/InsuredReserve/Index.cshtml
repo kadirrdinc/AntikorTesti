@@ -1,0 +1,144 @@
+﻿@model AT.Web.UI.ViewModel.UserViewModel
+@{
+    ViewData["Title"] = "Index";
+}
+<div style="margin-top:30px;">
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table mr-1"></i>
+            REZERVASYON İSTEK LİSTESİ
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm" id="tblDataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>AD SOYAD</th>
+                            <th>TC NO</th>
+                            <th>POLİÇE NO</th>
+                            <th>İL</th>
+                            <th>İLÇE</th>
+                            <th>REZERVASYON TARİHİ</th>
+                            <th>DURUM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var insured in Model.InsuredUsers)
+                        {
+                            <tr>
+                                <td>@string.Format("{0} {1}", insured.FirstName, insured.LastName)</td>
+                                <td>@insured.IdentityNo</td>
+                                <td>@insured.PolicyNo</td>
+                                <td>@insured.City.Name</td>
+                                <td>@insured.District.Name</td>
+                                <td>@insured.RezervDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (insured.IsConfirm != true)
+                                    {
+                                        <button class="btn btn-sm btn-danger editInsured" data-toggle="modal" data-target="#exampleModalCenter" id=@insured.Id>ONAYLANMAMIŞ</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-success btnDelete" disabled id=@insured.Id>ONAYLANMIŞ</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">GÜNCELLE</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form asp-route="~/InsuredReserve/Edit" id="updatedForm">
+                                    <input type="hidden" id="formId" asp-for="@Model.InsuredUser.Id" />
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="small mb-1" for="inputRezervDate">REZERVASYON TARİHİ</label>
+                                            <input class="form-control datepicker" id="inputRezervDate" type="datetime" asp-for="@Model.InsuredUser.ConfirmRezervDate" required />
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Kapat</button>
+                                        <input type="submit" class="btn btn-sm btn-success" style="float:right" id="btnSave" value="Kaydet" />
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('.editInsured').click(function (e) {
+                e.preventDefault();
+                var id = $(this).attr('id');
+                $.ajax({
+                    type: 'GET',
+                    url: '/InsuredReserve/Edit',
+                    data: { 'id': id, },
+                    dataType: 'Json',
+                    success: function (data) {
+                        $('#formId').val(data.Id);
+                    },
+                    error: function (data) {
+                        alert(data);
+                    }
+                });
+            });
+
+            $('#updatedForm').submit(function (e) {
+                e.preventDefault();
+                swal({
+                    title: "Güncellemek istediğinizden emin misiniz ?",
+                    icon: "info",
+                    buttons: ["İptal", "Güncelle"],
+                    dangerMode: true,
+                    closeOnEsc: false,
+                    closeOnClickOutside: false,
+                }).then(function (isConfirm) {
+                    if (!isConfirm) return;
+                    $.ajax({
+                        type: 'post',
+                        url: '/InsuredReserve/Edit',
+                        data: $('#updatedForm').serialize(),
+                        success: function (data) {
+                            debugger;
+                            if (data.IsSuccess) {
+                                swal({
+                                    title: data.Message,
+                                    text: "Yönlendiriliyorsunuz",
+                                    icon: "success",
+                                    buttons: false,
+                                    closeOnClickOutside: false,
+                                    closeOnEsc: false,
+                                    timer: 2000,
+                                });
+                                setTimeout(function () {
+                                    window.location.href = "/Home/Index";
+                                }, 2000);
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
+
